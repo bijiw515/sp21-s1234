@@ -13,7 +13,7 @@ public class Collatz {
             return n / 2;
         }
     }
-
+gi
     public static void main(String[] args) {
         int n = 5;
         System.out.print(n + " ");
