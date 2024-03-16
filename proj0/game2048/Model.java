@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author TODO: The great Bijiw(lmao)
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -93,6 +93,57 @@ public class Model extends Observable {
         checkGameOver();
         setChanged();
     }
+    public boolean resonable_action(Side side , int col , int row , int destination) {
+        boolean changed = false;
+        Tile tile = this.board.tile(col , row);
+        Tile goal = this.board.tile(col , destination);
+
+        if (tile != null){
+            if (goal==null) {
+                this.board.move(col, destination, tile);
+                changed = destination != row;
+            }
+            else if (tile.value() == goal.value()){
+                this.board.move(col, destination, tile);
+                this.score += tile.value() * 2;
+                changed = destination != row;
+            }
+            else {
+                this.board.move(col, destination - 1, tile);
+                changed = (destination -  1) != row;
+            }
+        }
+        return changed;
+    }
+    public boolean tilt_col(Side side , int col ) {
+        int destination = this.board.size() - 1;
+        boolean changed = false;
+        int size = this.board.size();
+        boolean [] cases;
+        cases = new boolean[size];
+
+        for(int row = size - 2 ; row >= 0; row -= 1){
+            if(this.board.tile(col , destination) == null || this.board.tile(col , row) == null){
+                cases[row] = resonable_action(side , col , row , destination);
+            }else{
+                cases[row] = resonable_action(side , col , row , destination);
+                destination -= 1;
+            }
+        }
+        changed = check_changed(cases);
+        return changed;
+    }
+
+    public boolean check_changed(boolean [] cases){
+        boolean changed = false;
+        for (int i = 0 ; i < this.board.size() ; i += 1) {
+            if (cases[i] == true) {
+                changed = true;
+                break;
+            }
+        }
+        return changed;
+    }
 
     /** Tilt the board toward SIDE. Return true iff this changes the board.
      *
@@ -109,10 +160,19 @@ public class Model extends Observable {
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
-
+        int size = this.board.size();
+        boolean [] cases;
+        cases = new boolean[size];
+        this.board.setViewingPerspective(side);
+            for (int col = 0; col < this.board.size(); col += 1) {
+                cases[col] = tilt_col(side, col);
+            }
+        this.board.setViewingPerspective(Side.NORTH);
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        changed = check_changed(cases);
+
 
         checkGameOver();
         if (changed) {
@@ -136,8 +196,15 @@ public class Model extends Observable {
     /** Returns true if at least one space on the Board is empty.
      *  Empty spaces are stored as null.
      * */
+
+
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for(int i = 0 ; i < b.size() ; i += 1){
+            for (int j = 0 ; j < b.size() ; j += 1){
+                if(b.tile(i , j) == null) return  true;
+            }
+        }
         return false;
     }
 
@@ -148,6 +215,12 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for(int i = 0 ; i < b.size() ; i += 1){
+            for (int j = 0 ; j < b.size() ; j += 1){
+                if(b.tile(i , j) == null)continue;
+                if(b.tile(i , j).value() == MAX_PIECE) return  true;
+            }
+        }
         return false;
     }
 
@@ -157,8 +230,23 @@ public class Model extends Observable {
      * 1. There is at least one empty space on the board.
      * 2. There are two adjacent tiles with the same value.
      */
+
+    public  static  boolean have_valid_move(Board b , int col , int row){
+        if(row == b.size() - 1 && col == b.size() - 1)return false;if(col == b.size() - 1) return b.tile(col , row).value() == b.tile(col , row + 1).value();
+        else if(row == b.size() - 1) return b.tile(col , row).value() == b.tile(col + 1 , row).value();
+        else if(col == b.size() - 1) return b.tile(col , row).value() == b.tile(col , row + 1).value();
+        else return b.tile(col , row).value() == b.tile(col , row + 1).value() || b.tile(col , row).value() == b.tile(col + 1 , row).value();
+    }
+
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        if(emptySpaceExists(b)) return true;
+        if(maxTileExists(b)) return  true;
+        for (int col = 0 ; col < b.size() ; col += 1){
+            for (int row = 0 ; row < b.size() ; row += 1){
+                if(have_valid_move(b , col , row )) return true;
+            }
+        }
         return false;
     }
 
