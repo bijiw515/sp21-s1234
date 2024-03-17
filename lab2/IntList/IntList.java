@@ -17,6 +17,7 @@ public class IntList {
         return 1 + this.rest.size();
     }
 
+
     /** Return the size of the list using no recursion! */
     public int iterativeSize() {
         IntList p = this;
