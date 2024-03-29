@@ -27,12 +27,12 @@ public class ArrayDeque<T> implements Deque<T>  {
             return next;
         }
     }
-    
+
     public Iterator<T> iterator(){
         return new ArrayDeque_iterator();
     }
 
-    public int get_length(){
+    private int get_length(){
         return this.items.length;
     }
 
@@ -95,11 +95,6 @@ public class ArrayDeque<T> implements Deque<T>  {
         this.items[rear] = item;
         this.size += 1;
         move_rear();
-    }
-
-    @Override
-    public boolean isEmpty(){
-        return this.size == 0;
     }
 
     @Override

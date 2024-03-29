@@ -135,8 +135,4 @@ public class LinkedListDeque <T> implements Deque<T> {
         }
         return true;
     }
-    @Override
-    public boolean isEmpty(){
-        return this.size == 0;
-    }
 }
