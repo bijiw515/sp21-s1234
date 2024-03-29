@@ -27,8 +27,7 @@ public class ArrayDeque<T> implements Deque<T>  {
             return next;
         }
     }
-
-    @Override
+    
     public Iterator<T> iterator(){
         return new ArrayDeque_iterator();
     }
@@ -104,7 +103,6 @@ public class ArrayDeque<T> implements Deque<T>  {
     }
 
     @Override
-
     public int size(){
         return this.size;
     }
@@ -137,7 +135,6 @@ public class ArrayDeque<T> implements Deque<T>  {
     }
 
     @Override
-
     public void printDeque(){
         int i = this.front + 1;
         while (i != this.rear){

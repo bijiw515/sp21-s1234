@@ -11,8 +11,7 @@ public interface Deque<T> extends Iterable<T> {
     public T removeLast();
     public T get(int index);
 
+    @Override
     public Iterator<T> iterator();
-    default public boolean isEmpty() {
-        return this.size() == 0;
-    }
+    public boolean isEmpty();
 }

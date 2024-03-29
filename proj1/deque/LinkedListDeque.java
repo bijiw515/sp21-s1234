@@ -43,7 +43,6 @@ public class LinkedListDeque <T> implements Deque<T> {
         }
     }
 
-    @Override
     public Iterator<T> iterator(){
         return new LinkedList_iterator();
     }
@@ -71,8 +70,8 @@ public class LinkedListDeque <T> implements Deque<T> {
     public int size(){
         return this.size;
     }
-    @Override
 
+    @Override
     public void printDeque(){
         node p = this.scout;
         while (p != this.scout){
@@ -106,10 +105,6 @@ public class LinkedListDeque <T> implements Deque<T> {
         return null;
     }
 
-    private node getlast(){
-        return this.last;
-    }
-
     @Override
     public T get(int index){
         node p = this.scout;
@@ -123,6 +118,7 @@ public class LinkedListDeque <T> implements Deque<T> {
         if (index == 0)return p.next.value;
         else return get_helper(p.next , index - 1);
     }
+
     public T getRecursive(int index){
         return get_helper(this.scout , index);
     }
@@ -138,5 +134,9 @@ public class LinkedListDeque <T> implements Deque<T> {
             if (this.get(i).getClass() != other.get(i).getClass() || this.get(i) != other.get(i))return false;
         }
         return true;
+    }
+    @Override
+    public boolean isEmpty(){
+        return this.size == 0;
     }
 }
