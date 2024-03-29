@@ -1,6 +1,7 @@
 package deque;
 
 import org.hamcrest.core.IsInstanceOf;
+import org.junit.Test;
 
 import java.util.Iterator;
 
@@ -81,6 +82,7 @@ public class ArrayDeque<T> implements Deque<T>  {
         }
     }
 
+    @Override
     public void addFirst(T item){
         if (this.size == this.items.length)resize_inc(this.size * 2);
         this.items[front] = item;
@@ -88,6 +90,7 @@ public class ArrayDeque<T> implements Deque<T>  {
         move_front();
     }
 
+    @Override
     public void addLast(T item){
         if (this.size == this.items.length)resize_inc(this.size * 2);
         this.items[rear] = item;
@@ -95,18 +98,22 @@ public class ArrayDeque<T> implements Deque<T>  {
         move_rear();
     }
 
+    @Override
     public boolean isEmpty(){
         return this.size == 0;
     }
+
+    @Override
 
     public int size(){
         return this.size;
     }
 
-    public boolean wasting_memory(){
+    private boolean wasting_memory(){
         return this.size < this.items.length / 4 && this.items.length > 16;
     }
 
+    @Override
     public T removeFirst(){
         if (wasting_memory()) resize_dec(this.items.length / 2);
         this.front = (this.front == this.items.length - 1)? 0 : front + 1;
@@ -115,7 +122,7 @@ public class ArrayDeque<T> implements Deque<T>  {
         if (! this.isEmpty())this.size -= 1;
         return first;
     }
-
+    @Override
     public T removeLast(){
         if (wasting_memory())resize_dec(this.items.length / 2);
         this.rear = (this.rear == 0)? this.items.length - 1 : rear - 1;
@@ -124,10 +131,12 @@ public class ArrayDeque<T> implements Deque<T>  {
         if (! this.isEmpty())this.size -= 1;
         return last;
     }
-
+    @Override
     public T get(int index){
         return this.items[(this.front + index + 1) % this.items.length];
     }
+
+    @Override
 
     public void printDeque(){
         int i = this.front + 1;
