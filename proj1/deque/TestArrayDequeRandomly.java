@@ -2,15 +2,16 @@ package deque;
 
 import edu.princeton.cs.algs4.StdRandom;
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 
-public class TestLinkedListRandomly {
+public class TestArrayDequeRandomly {
     @Test
     public void test_randomly(){
-        ArrayDeque<Integer> L_noresize = new ArrayDeque<>();
-        LinkedListDeque<Integer> L_buggy = new LinkedListDeque<>();
+        ArrayDeque<Integer> L_buggy = new ArrayDeque<>();
+        LinkedListDeque<Integer> L_noresize = new LinkedListDeque<>();
 
-        int N = 10000;
+        int N = 100000;
         for (int i = 0; i < N; i += 1) {
             int operationNumber = StdRandom.uniform(0, 5);
             if (operationNumber == 0) {
@@ -47,7 +48,15 @@ public class TestLinkedListRandomly {
                 int randVal = StdRandom.uniform(0, 100);
                 L_noresize.addFirst(randVal);
                 L_buggy.addFirst(randVal);
-                System.out.println("addLast(" + randVal + ")");
+                System.out.println("addFirst(" + randVal + ")");
+            }else if (operationNumber == 5) {
+                if (!L_noresize.isEmpty()) {
+                    int first_noresize = L_noresize.removeFirst();
+                    int first_buggy = L_buggy.removeFirst();
+                    assertEquals(first_noresize, first_buggy);
+                    System.out.println("removeLast_noresize(" + first_noresize + ")");
+                    System.out.println("removeLast_buggy(" + first_buggy + ")");
+                }
             }
         }
     }

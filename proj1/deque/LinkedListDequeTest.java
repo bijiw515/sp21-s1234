@@ -178,49 +178,20 @@ public class LinkedListDequeTest {
         LinkedListDeque<Integer> deque = new LinkedListDeque<>();
         deque.addFirst(1);
         deque.addLast(2);
-        assertEquals("Get(0) should return first item", Integer.valueOf(1), deque.get(0));
-        assertEquals("Get(1) should return last item", Integer.valueOf(2), deque.get(1));
+        assertEquals("Get(0) should return first item", Integer.valueOf(1), deque.getRecursive(0));
+        assertEquals("Get(1) should return last item", Integer.valueOf(2), deque.getRecursive(1));
     }
 
 
-    /*@Test
-    public void test_randomly() {
-        LinkedListDeque<Integer> L_noresize = new LinkedListDeque<>();
-        BuggyAList<Integer> L_buggy = new BuggyAList<>();
-
-        int N = 5000;
-        for (int i = 0; i < N; i += 1) {
-            int operationNumber = StdRandom.uniform(0, 4);
-            if (operationNumber == 0) {
-                // addLast
-                int randVal = StdRandom.uniform(0, 100);
-                L_noresize.addLast(randVal);
-                L_buggy.addLast(randVal);
-                System.out.println("addLast(" + randVal + ")");
-            } else if (operationNumber == 1) {
-                // size
-                int size_noresize = L_noresize.size();
-                int size_buggy = L_buggy.size();
-                assertEquals(size_noresize, size_buggy);
-                System.out.println("size_noresize: " + size_noresize);
-                System.out.println("size_buggy: " + size_buggy);
-            } else if (operationNumber == 2) {
-                if (L_noresize.size() != 0) {
-                    int last_noresize = L_noresize.getLast();
-                    int last_buggy = L_buggy.getLast();
-                    assertEquals(last_noresize, last_buggy);
-                    System.out.println("getLast_noresize(" + last_noresize + ")");
-                    System.out.println("getLast_buggy(" + last_buggy + ")");
-                }
-            } else if (operationNumber == 3) {
-                if (L_noresize.size() != 0) {
-                    int last_noresize = L_noresize.removeLast();
-                    int last_buggy = L_buggy.removeLast();
-                    assertEquals(last_noresize, last_buggy);
-                    System.out.println("removeLast_noresize(" + last_noresize + ")");
-                    System.out.println("removeLast_buggy(" + last_buggy + ")");
-                }
-            }
+    @Test
+    public void testThreeAddThreeRemove(){
+        AListNoResizing<Integer> alist_no_resizing = new AListNoResizing<>();
+        LinkedListDeque<Integer> buggyAList = new LinkedListDeque<>();
+        for (int i = 0 ; i < 3 ; i += 1){
+            buggyAList.addFirst(i);
         }
-    }*/
+        for (int j = 0 ; j < 3 ; j += 1){
+            buggyAList.removeLast();
+        }
+    }
 }

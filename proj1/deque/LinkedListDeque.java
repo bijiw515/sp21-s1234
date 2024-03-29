@@ -1,6 +1,8 @@
 package deque;
 
-public class LinkedListDeque <T>{
+import java.util.Iterator;
+
+public class LinkedListDeque <T> implements Deque<T> {
     private class node{
         public T value;
         public node next;
@@ -24,24 +26,46 @@ public class LinkedListDeque <T>{
         this.last = this.scout;
     }
 
-    public void addFirst(T item){
-        this.scout.next = new node(item , this.scout.next , this.scout);
-        if (this.scout.next.next == this.scout){
-            this.last = this.scout.next;
-            this.scout.prev = this.last;
+    private class LinkedList_iterator implements Iterator<T> {
+        private int curr;
+        public LinkedList_iterator(){
+            this.curr = 0;
         }
-        this.size += 1;
+        @Override
+        public boolean hasNext() {
+            return this.curr < size;
+        }
+        @Override
+        public T next() {
+            T next = get(this.curr);
+            curr += 1;
+            return next;
+        }
+    }
+
+    @Override
+    public Iterator<T> iterator(){
+        return new LinkedList_iterator();
+    }
+
+    public void addFirst(T item){
+
+        if (this.isEmpty()){
+            this.addLast(item);
+        }else {
+            this.scout.next = new node(item , this.scout.next , this.scout);
+            this.scout.next.next.prev = this.scout.next;
+            this.size += 1;
+        }
+
     }
 
     public void addLast(T item){
         this.last.next = new node(item , this.scout , this.last);
-        this.last = last.next;
-        this.scout.prev = this.last;
-        this.size += 1;
-    }
 
-    public boolean isEmpty(){
-        return this.scout.prev == this.scout && this.scout.next == this.scout;
+        this.scout.prev = this.last.next;
+        this.last = last.next;
+        this.size += 1;
     }
 
     public int size(){
@@ -59,6 +83,7 @@ public class LinkedListDeque <T>{
 
     public T removeFirst(){
         if (! this.isEmpty()) {
+            if (this.last == this.scout.next)this.last = this.scout;
             T first_value = this.scout.next.value;
             this.scout.next = this.scout.next.next;
             this.scout.next.prev = this.scout;
@@ -83,11 +108,35 @@ public class LinkedListDeque <T>{
     public node getlast(){
         return this.last;
     }
+
+
     public T get(int index){
         node p = this.scout;
         for(int i = 0 ; i < index ; i += 1){
             p = p.next;
         }
         return p.next.value;
+    }
+
+    private T get_helper(node p , int index){
+        if (index == 0)return p.next.value;
+        else return get_helper(p.next , index - 1);
+    }
+
+    public T getRecursive(int index){
+        return get_helper(this.scout , index);
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if (o == null)return false;
+        if (this.getClass() != o.getClass())return false;
+        if (this == o)return true;
+        LinkedListDeque<T> other = (LinkedListDeque<T>) o;
+        if (other.size != this.size)return false;
+        for (int i = 0 ; i < this.size ; i += 1){
+            if (this.get(i).getClass() != other.get(i).getClass() || this.get(i) != other.get(i))return false;
+        }
+        return true;
     }
 }

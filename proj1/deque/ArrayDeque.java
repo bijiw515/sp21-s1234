@@ -1,10 +1,36 @@
 package deque;
 
-public class ArrayDeque<T> {
+import org.hamcrest.core.IsInstanceOf;
+
+import java.util.Iterator;
+
+public class ArrayDeque<T> implements Deque<T>  {
     private int size;
     private T[] items;
     private int front;
     private int rear;
+
+    private class ArrayDeque_iterator implements Iterator<T>{
+        private int curr;
+        public ArrayDeque_iterator(){
+            this.curr = 0;
+        }
+        @Override
+        public boolean hasNext() {
+            return this.curr < size;
+        }
+        @Override
+        public T next() {
+            T next = get(this.curr);
+            this.curr += 1;
+            return next;
+        }
+    }
+
+    @Override
+    public Iterator<T> iterator(){
+        return new ArrayDeque_iterator();
+    }
 
     public int get_length(){
         return this.items.length;
@@ -28,10 +54,19 @@ public class ArrayDeque<T> {
 
     private void resize_inc(int capacity){
         T [] new_items = (T[]) new Object[capacity];
-        System.arraycopy(this.items , 0 , new_items , 0 , this.rear);
-        System.arraycopy(this.items , this.front + 1 , new_items ,this.front + this.size + 1 , this.size - this.rear);
-        this.items = new_items;
-        this.front += this.size;
+        if (this.front < this.rear){
+            System.arraycopy(this.items , 0 , new_items , 0 , this.rear);
+            System.arraycopy(this.items , this.front + 1 , new_items ,this.front + this.size + 1 , this.size - this.rear);
+            this.items = new_items;
+            this.front += capacity / 2;
+        }else if (this.front > this.rear){
+            System.arraycopy(this.items , 0  , new_items ,1 , this.size );
+            this.items = new_items;
+            this.front = 0;
+            this.rear = this.size + 1;
+
+        }
+
     }
 
     private void resize_dec(int capacity){
@@ -69,7 +104,7 @@ public class ArrayDeque<T> {
     }
 
     public boolean wasting_memory(){
-        return this.size < this.items.length / 4 && this.items.length >= 16;
+        return this.size < this.items.length / 4 && this.items.length > 16;
     }
 
     public T removeFirst(){
@@ -103,5 +138,18 @@ public class ArrayDeque<T> {
             i = (i == this.items.length) ? 0 : i + 1;
         }
         System.out.println();
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if (o == null)return false;
+        if (this.getClass() != o.getClass())return false;
+        if (this == o)return true;
+        ArrayDeque<T> other = (ArrayDeque<T>) o;
+        if (other.size != this.size)return false;
+        for (int i = 0 ; i < this.size ; i += 1){
+            if (this.get(i).getClass() != other.get(i).getClass() || this.get(i) != other.get(i))return false;
+        }
+        return true;
     }
 }
