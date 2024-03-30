@@ -160,4 +160,20 @@ public class TestEquality {
         // Test whether they are not equal
         assertFalse(deque1.equals(deque2));
     }
+    @Test
+    public void testArrayDequeEqualsWithDifferentSubClass() {
+        // Create two ArrayDeque instances with different sizes
+        Deque<Integer> deque1 = new ArrayDeque<>();
+        deque1.addLast(1);
+        deque1.addLast(2);
+        deque1.addLast(3);
+
+        Deque<Integer> deque2 = new LinkedListDeque<>();
+        deque2.addLast(1);
+        deque2.addLast(2);
+        deque2.addLast(3);
+
+        // Test whether they are not equal
+        assertTrue(deque1.equals(deque2));
+    }
 }

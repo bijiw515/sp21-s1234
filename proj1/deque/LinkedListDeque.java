@@ -74,7 +74,7 @@ public class LinkedListDeque <T> implements Deque<T> , Iterable<T>{
     @Override
     public void printDeque(){
         node p = this.scout;
-        while (p != this.scout){
+        while (!this.isEmpty()){
             if(p == this.last)System.out.println(p.value);
             System.out.print(p.value + " ");
             p = p.next;
@@ -126,11 +126,11 @@ public class LinkedListDeque <T> implements Deque<T> , Iterable<T>{
     @Override
     public boolean equals(Object o){
         if (o == null)return false;
-        if (!(o instanceof LinkedListDeque))return false;
+        if (!(o instanceof Deque))return false;
         if (this == o)return true;
-        LinkedListDeque<T> other = (LinkedListDeque<T>) o;
-        if (other.size != this.size)return false;
-        for (int i = 0 ; i < this.size ; i += 1){
+        Deque<T> other = (Deque<T>) o;
+        if (other.size() != this.size())return false;
+        for (int i = 0 ; i < this.size() ; i += 1){
             if (!this.get(i).equals(other.get(i)) )return false;
         }
         return true;
