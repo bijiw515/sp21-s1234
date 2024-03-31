@@ -25,5 +25,11 @@ public class SquarePrimesTest {
         assertEquals("9 -> 25 -> 49 -> 289 -> 841" , lst.toString());
         assertTrue(changed);
     }
+    @Test
+    public void testaddadjucent(){
+        IntList L = IntList.of(1 , 1 , 2 , 3);
+        L.addadjucent();
+        assertEquals("4 -> 3" , L.toString());
+    }
 }
 

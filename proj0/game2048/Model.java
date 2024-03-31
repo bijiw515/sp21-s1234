@@ -121,13 +121,13 @@ public class Model extends Observable {
         int size = this.board.size();
         boolean [] cases;
         cases = new boolean[size];
-
         for(int row = size - 2 ; row >= 0; row -= 1){
-            if(this.board.tile(col , destination) == null || this.board.tile(col , row) == null){
-                cases[row] = resonable_action(side , col , row , destination);
-            }else{
+            if (this.board.tile(col , destination) != null && this.board.tile(col , row) != null){
                 cases[row] = resonable_action(side , col , row , destination);
                 destination -= 1;
+            }
+            else {
+                cases[row] = resonable_action(side , col , row , destination);
             }
         }
         changed = check_changed(cases);

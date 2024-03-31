@@ -47,6 +47,18 @@ public class IntList {
         }
     }
 
+
+    public void addadjucent(){
+        if (this.rest == null){
+            return;
+        }
+        else if (this.first == this.rest.first){
+            this.first = this.first + this.rest.first;
+            this.rest = this.rest.rest;
+            this.addadjucent();
+        }
+        else this.rest.addadjucent();
+    }
     /**
      * Method to create an IntList from an argument list.
      * You don't have to understand this code. We have it here
