@@ -33,10 +33,10 @@ public class CapersRepository {
      *    - dogs/ -- folder containing all of the persistent data for dogs
      *    - story -- file containing the current story
      */
-    public static void setupPersistence() {
+    public static void setupPersistence() throws IOException {
         // TODO
         File story = Utils.join(CAPERS_FOLDER, "story");
-        try {
+        /*try {
             if (!CAPERS_FOLDER.exists()) {
                 CAPERS_FOLDER.mkdir();
             }
@@ -48,7 +48,10 @@ public class CapersRepository {
             }
         } catch (IOException excp) {
             System.out.println(excp.getMessage());
-        }
+        }*/
+        CAPERS_FOLDER.mkdir();
+        Dog.DOG_FOLDER.mkdir();
+        story.createNewFile();
     }
 
     /**
@@ -72,6 +75,10 @@ public class CapersRepository {
      */
     public static void makeDog(String name, String breed, int age) {
         // TODO
+        Dog dog = new Dog(name , breed , age);
+        dog.saveDog();
+        Dog saved_dog = Dog.fromFile(name);
+        System.out.println(saved_dog);
     }
 
     /**
