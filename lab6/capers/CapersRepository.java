@@ -4,6 +4,7 @@ import javax.print.DocFlavor;
 import java.io.File;
 import java.io.IOException;
 
+import static capers.Dog.DOG_FOLDER;
 import static capers.Utils.*;
 
 /** A repository for Capers 
@@ -50,7 +51,7 @@ public class CapersRepository {
             System.out.println(excp.getMessage());
         }*/
         CAPERS_FOLDER.mkdir();
-        Dog.DOG_FOLDER.mkdir();
+        DOG_FOLDER.mkdir();
         story.createNewFile();
     }
 
@@ -89,5 +90,9 @@ public class CapersRepository {
      */
     public static void celebrateBirthday(String name) {
         // TODO
+        File dog_file = join(DOG_FOLDER , name);
+        Dog exist_dog = Dog.fromFile(name);
+        exist_dog.haveBirthday();
+        writeObject(dog_file , exist_dog);
     }
 }
