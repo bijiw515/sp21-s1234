@@ -1,10 +1,10 @@
 # Gitlet Design Document
 
-**Name**:
+**Bijiw**:
 
 ## Classes and Data Structures
 
-### Class 1
+### commit
 
 #### Fields
 

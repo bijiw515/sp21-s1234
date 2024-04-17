@@ -1,6 +1,13 @@
 package gitlet;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
@@ -9,7 +16,7 @@ import static gitlet.Utils.*;
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ *  @author Bijiw
  */
 public class Repository {
     /**
@@ -20,10 +27,412 @@ public class Repository {
      * variable is used. We've provided two examples for you.
      */
 
-    /** The current working directory. */
+    /**
+     * The current working directory.
+     */
     public static final File CWD = new File(System.getProperty("user.dir"));
-    /** The .gitlet directory. */
+    /**
+     * The .gitlet directory.
+     */
     public static final File GITLET_DIR = join(CWD, ".gitlet");
+    public static final File OBJECTS = join(GITLET_DIR, "objects");
+    public static final File STAGING_AREA = join(GITLET_DIR, "staging_area");
+    public static final File STAGING_ADD = join(STAGING_AREA, "staging_add");
+    public static final File STAGING_REMOVAL = join(STAGING_AREA, "staging_removal");
+    public static final File BRANCH_FOLDER = join(GITLET_DIR , "branches");
 
-    /* TODO: fill in the rest of this class. */
+    private static void init_folders() {
+        GITLET_DIR.mkdir();
+        OBJECTS.mkdir();
+        STAGING_AREA.mkdir();
+        STAGING_ADD.mkdir();
+        STAGING_REMOVAL.mkdir();
+        BRANCH_FOLDER.mkdir();
+        Commit.COMMITS_FOLDER.mkdir();
+        Commit.MAPS_FOLDER.mkdir();
+        Blobs_map.BLOBS_FOLDER.mkdir();
+    }
+
+    private static String get_Head_id(){
+        File HEAD = join(GITLET_DIR , "HEAD");
+        String HEAD_branch_name = readContentsAsString(HEAD);
+        File HEAD_branch = join(BRANCH_FOLDER , HEAD_branch_name);
+        return readContentsAsString(HEAD_branch);
+    }
+
+    private static String get_Head_name(){
+        File HEAD = join(GITLET_DIR , "HEAD");
+        return readContentsAsString(HEAD);
+    }
+
+    private static String get_specified_branch(String branch_name){
+        File branch = join(BRANCH_FOLDER , branch_name);
+        return readContentsAsString(branch);
+    }
+
+    private static void update_Head(String branch_name){
+        File HEAD = join(GITLET_DIR, "HEAD");
+        writeContents(HEAD, branch_name);
+    }
+
+    private static void update_current_branch(String branch_id){
+        String current_branch_name = get_Head_name();
+        File current_branch = join(BRANCH_FOLDER, current_branch_name);
+        writeContents(current_branch, branch_id);
+    }
+
+    public static String sha1_obeject(Serializable object){
+        byte[] serielized_object = serialize(object);
+        return sha1((Object) serielized_object);
+    }
+
+    public static String sha1_file(String file_name){
+        File given_file = join(CWD , file_name);
+        String given_content = readContentsAsString(given_file);
+        return sha1((Object) given_content);
+    }
+
+    private static Commit get_current_commit(){
+        String HEAD_id = get_Head_id();
+        return Commit.from_file(HEAD_id);
+    }
+
+    private static String get_content_from_blob(String blob_id){
+        File blob_file = join(Blobs_map.BLOBS_FOLDER , blob_id);
+        return readContentsAsString(blob_file);
+    }
+
+    private static void clear_staging_area(){
+            //update the blobs in stage for addition
+            List<String> names_for_addition = plainFilenamesIn(Repository.STAGING_ADD);
+            if (names_for_addition != null) {
+                for (String name_for_addition : names_for_addition) {
+                    File file_for_addition = join(Repository.STAGING_ADD, name_for_addition);
+                    file_for_addition.delete();
+                }
+            }
+            //update the blobs in stage for removal
+            List<String> names_for_removal = plainFilenamesIn(Repository.STAGING_REMOVAL);
+            if ( names_for_removal != null) {
+                for (String name_for_removal : names_for_removal) {
+                    File file_for_removal = join(Repository.STAGING_ADD, name_for_removal);
+                    file_for_removal.delete();
+                }
+            }
+    }
+
+    private static void validate_CWD_untrack_curr_commit(){
+        Commit current_commit = get_current_commit();
+        Blobs_map current_blobs = current_commit.get_blobs();
+        List<String> file_names = plainFilenamesIn(CWD);
+        if (file_names == null){
+            if (! current_blobs.isEmpty()){
+                throw error("There is an untracked file in the way; delete it, or add and commit it first.");
+            }
+        }
+        if (file_names.size() != current_blobs.size()){
+            throw error("There is an untracked file in the way; delete it, or add and commit it first.");
+        }
+        for (String name : file_names){
+            String tracked_blob_id = current_blobs.get(name);
+            String current_blob_id = sha1_file(name);
+            if (! tracked_blob_id.equals(current_blob_id)){
+                throw error("There is an untracked file in the way; delete it, or add and commit it first.");
+            }
+        }
+    }
+
+    /**
+     * Creates a new Gitlet version-control system in the current directory.
+     * This system will automatically start with one commit:
+     * a commit that contains no files and has the commit message initial commit
+     * (just like that, with no punctuation). It will have a single branch: master,
+     * which initially points to this initial commit, and master will be the current branch.
+     * The timestamp for this initial commit will be 00:00:00 UTC, Thursday, 1 January 1970
+     * in whatever format you choose for dates (this is called “The (Unix) Epoch”, represented internally by the time 0.)
+     * Since the initial commit in all repositories created by Gitlet will have exactly the same content,
+     * it follows that all repositories will automatically share this commit (they will all have the same UID)
+     * and all commits in all repositories will trace back to it.
+     */
+    public static void init() throws IOException {
+        if (GITLET_DIR.exists()) {
+            throw error("A Gitlet version-control system already exists in the current directory.");
+        }
+        //init the folders
+        init_folders();
+        Blobs_map initial_blobs = new Blobs_map();
+        String initial_blobs_id = sha1_obeject(initial_blobs);
+        initial_blobs.save_blobs();
+        //set the first commit
+        Commit initial_commit = new Commit("initial commit", null, initial_blobs_id);
+        initial_commit.save_commit();
+        String initial_commit_id = sha1_obeject(initial_commit);
+        //set the HEAD and master
+        update_Head("master");
+        update_current_branch(initial_commit_id);
+    }
+
+    /**
+     * Adds a copy of the file as it currently exists to the staging area
+     * (see the description of the commit command).
+     * For this reason, adding a file is also called staging the file for addition.
+     * Staging an already-staged file overwrites the previous entry in the staging area with the new contents.
+     * The staging area should be somewhere in .gitlet.
+     * If the current working version of the file is identical
+     * to the version in the current commit, do not stage it to be added,
+     * and remove it from the staging area if it is already there
+     * (as can happen when a file is changed, added, and then changed back to it’s original version).
+     * The file will no longer be staged for removal (see gitlet rm), if it was at the time of the command.
+     */
+
+    public static void add_file(String file_name) {
+        File file_to_add = join(CWD, file_name);
+        if (! file_to_add.exists()) {
+            throw error("File does not exist.");
+        }
+        String given_content = readContentsAsString(file_to_add);
+        String given_id = sha1((Object) given_content);
+        //get the current commit and current blobs
+        Commit current_commit = get_current_commit();
+        Map<String, String> current_blobs = current_commit.get_blobs();
+        //as can happen when a file is changed, added, and then changed back to it’s original version
+        File file_to_commit = join(STAGING_ADD , file_name);
+        if (file_to_commit.exists() && Objects.equals(current_blobs.get(file_name), given_id)) {
+            file_to_commit.delete();
+        }
+        //add the file to the staging area
+        if (current_blobs.isEmpty() || !Objects.equals(current_blobs.get(file_name), given_id)) {
+            File blob = join(Blobs_map.BLOBS_FOLDER , given_id);
+            writeContents(blob, (Object) given_content);
+            writeContents(file_to_commit, (Object) given_id);
+        }
+    }
+
+    private static void copy_the_blobs(Map<String, String> new_Blobs, Map<String, String> parent_Blobs) {
+        new_Blobs.putAll(parent_Blobs);
+    }
+    /**
+     *  Saves a snapshot of tracked files in the current commit and staging area
+     *  so they can be restored at a later time, creating a new commit.
+     **/
+    public static void make_commit(String message){
+        //copy the parent commit
+        String HEAD_id = get_Head_id();
+        Commit parent_commit = get_current_commit();
+        //copy the parent blobs
+        Map<String , String> parent_blobs = parent_commit.get_blobs();
+        Blobs_map new_blobs = new Blobs_map();
+        copy_the_blobs(new_blobs , parent_blobs);
+        new_blobs.update_blobs();
+        String new_blobs_id = sha1_obeject(new_blobs);
+        new_blobs.save_blobs();
+        //create new commit
+        Commit new_commit = new Commit(message , HEAD_id , new_blobs_id);
+        new_commit.save_commit();
+        //reset the HEAD and current branch
+        String new_commit_id = sha1_obeject(new_commit);
+        update_current_branch(new_commit_id);
+    }
+
+    /**
+     *  Unstage the file if it is currently staged for addition.
+     *  If the file is tracked in the current commit,
+     *  stage it for removal and remove the file from the working directory
+     *  if the user has not already done so
+     *  (do not remove it unless it is tracked in the current commit).
+     **/
+    public static void remove_file(String file_name){
+        //relating files
+        File file_to_delete = join(CWD , file_name);
+        File file_to_remove = join(STAGING_REMOVAL , file_name);
+        File file_to_unstage = join(STAGING_ADD , file_name);
+        //get the current commit and the specified file(blob)
+        Commit current_commit = get_current_commit();
+        Map<String , String> current_blobs = current_commit.get_blobs();
+        String remove_id = current_blobs.get(file_name);
+        //unstage the specified file(blob)
+        if (file_to_unstage.exists()){
+            file_to_unstage.delete();
+        }
+        //stage for removal and delete the specified file in the working directory
+        if (remove_id != null){
+            writeContents(file_to_remove , remove_id);
+            restrictedDelete(file_to_delete);
+        }
+    }
+
+    /**
+     *  starting at the current head commit, display information
+     *  about each commit backwards along the commit tree until
+     *  the initial commit, following the first parent commit links
+     *  , ignoring any second parents found in merge commits.
+     *  (In regular Git, this is what you get with git log --first-parent).
+     *  This set of commit nodes is called the commit’s history.
+     *  For every node in this history, the information it should
+     *  display is the commit id, the time the commit was made, and the commit*/
+    public static void log(){
+        Commit current_commit = get_current_commit();
+        String current_commit_id = sha1_obeject(current_commit);
+        while (current_commit_id != null){
+            System.out.println(current_commit);
+            current_commit_id = current_commit.get_parent();
+            current_commit = Commit.from_file(current_commit_id);
+        }
+    }
+
+    /**
+     *  Like log, except displays information about all commits ever made.
+     *  The order of the commits does not matter.
+     **/
+    public static void global_log(){
+        List<String> ids_commits = plainFilenamesIn(Commit.COMMITS_FOLDER);
+        for (String commit_id : ids_commits){
+            Commit current_commit = Commit.from_file(commit_id);
+            System.out.println(current_commit);
+        }
+    }
+
+    /**
+     *  Prints out the ids of all commits that have the given commit message,
+     *  one per line. If there are multiple such commits, it prints the ids out
+     *  on separate lines. The commit message is a single operand; to indicate a
+     *  multiword message, put the operand in quotation marks, as for the commit command below.
+     **/
+    public static void find(String message){
+        List<String> ids_commits = plainFilenamesIn(Commit.COMMITS_FOLDER);
+        if (ids_commits == null){
+            throw error("Found no commit with that message.");
+        }
+        boolean have_such_commit = false;
+        for (String sha1_commit : ids_commits){
+            Commit current_commit = Commit.from_file(sha1_commit);
+            if (current_commit.get_message().equals(message)){
+                System.out.println(current_commit);
+                have_such_commit = true;
+            }
+        }
+        if (! have_such_commit){
+            throw error("Found no commit with that message.");
+        }
+    }
+
+    /**
+     * Displays what branches currently exist, and marks the current branch with a *.
+     * Also displays what files have been staged for addition or removal. An example
+     * of the exact format it should follow is as follows.
+     **/
+    public static void print_status(){
+        //list out the branches
+        String HEAD_branch_name = get_Head_name();
+        System.out.println(String.format("=== Branches ===\n*%s\n" ,HEAD_branch_name));
+        List<String> branches_name = plainFilenamesIn(BRANCH_FOLDER);
+        for (String branch_name : branches_name){
+            if (branch_name.equals(HEAD_branch_name)){
+                continue;
+            }
+            System.out.println(branch_name);
+        }
+        //list out the stage for addition
+        System.out.println("=== Staged Files ===");
+        List<String> file_names_addition = plainFilenamesIn(STAGING_ADD);
+        if (file_names_addition != null){
+            for (String file_name_addition : file_names_addition){
+                System.out.println(file_name_addition);
+            }
+        }
+        //list out the stage for removal
+        System.out.println("=== Removed Files ===");
+        List<String> file_names_removal = plainFilenamesIn(STAGING_ADD);
+        if (file_names_addition != null){
+            for (String file_name_removal : file_names_removal){
+                System.out.println(file_name_removal);
+            }
+        }
+    }
+
+    /**
+     *  Takes the version of the file as it exists in the head commit and puts it
+     *  in the working directory, overwriting the version of the file that’s already
+     *  there if there is one. The new version of the file is not staged.
+     **/
+    public static void checkout_head_commit_file(String file_name){
+        String current_commit_id = get_Head_id();
+        checkout_specified_commit_file(current_commit_id , file_name);
+    }
+
+    /**
+     *  Takes the version of the file as it exists in the commit with the given id,
+     *  and puts it in the working directory, overwriting the version of the file
+     *  that’s already there if there is one. The new version of the file is not staged.
+     **/
+    public static void checkout_specified_commit_file(String commit_id , String file_name){
+        Commit specified_commit = Commit.from_file(commit_id);
+        Map<String , String> specified_blobs = specified_commit.get_blobs();
+        String corresponding_blob_id = specified_blobs.get(file_name);
+        //check if corresponding_blob exits
+        if (corresponding_blob_id == null){
+            throw error("File does not exist in that commit.");
+        }
+        //overwrite the version of the file in the working directory
+        String tracked_content = get_content_from_blob(corresponding_blob_id);
+        File specified_file = join(CWD , file_name);
+        writeContents(specified_file , tracked_content);
+    }
+
+    /**
+     *  Takes all files in the commit at the head of the given branch, and puts them
+     *  in the working directory, overwriting the versions of the files that are already
+     *  there if they exist. Also, at the end of this command, the given branch will now be
+     *  considered the current branch (HEAD). Any files that are tracked in the current branch
+     *  but are not present in the checked-out branch are deleted. The staging area is cleared,
+     *  unless the checked-out branch is the current branch.
+     *  */
+    public static void checkout_specified_commit(String branch_name){
+        //check if the given branch exits
+        File branch_file = join(BRANCH_FOLDER , branch_name);
+        if (! branch_file.exists()){
+            throw error("No such branch exists.");
+        }
+        //check if the current branch is HEAD branch
+        String branch_id = get_specified_branch(branch_name);
+        if (branch_id.equals(get_Head_id())){
+            throw error("No need to checkout the current branch.");
+        }
+        //cheek if a working file is untracked in the current branch and would be overwritten by the checkout
+        validate_CWD_untrack_curr_commit();
+        //delete the current files(not directory) in working directory
+        List<String> file_names= plainFilenamesIn(CWD);
+        if (file_names != null){
+            for (String name_to_delete : file_names){
+                File file_to_delete = join(CWD , name_to_delete);
+                restrictedDelete(file_to_delete);
+            }
+        }
+        //overwrite each file in the working directory
+        Commit specified_commit = Commit.from_file(branch_id);
+        Map<String , String> specified_blobs = specified_commit.get_blobs();
+        for (Map.Entry<String , String> entry : specified_blobs.entrySet()){
+            String file_name = entry.getKey();
+            checkout_specified_commit_file(branch_id , file_name);
+        }
+        //The staging area is cleared, unless the checked-out branch is the current branch.
+        String HEAD_id = get_Head_id();
+        if (!branch_id.equals(HEAD_id)){
+            clear_staging_area();
+        }
+        //update the HEAD branch
+        update_Head(branch_name);
+    }
+
+    /**
+     * Creates a new branch with the given name, and points it at the current head commit.
+     * A branch is nothing more than a name for a reference (a SHA-1 identifier) to a commit node.
+     * This command does NOT immediately switch to the newly created branch (just as in real Git).
+     * Before you ever call branch, your code should be running with a default branch called “master”.
+     * */
+    public static void make_branch(String branch_name){
+        File new_branch = join(BRANCH_FOLDER , branch_name);
+        String HEAD_id = get_Head_id();
+        writeContents(new_branch , HEAD_id);
+    }
 }
