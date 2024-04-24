@@ -76,16 +76,36 @@ public class Main {
                 //java gitlet.Main checkout [branch name]
                 else {
                     validateNumArgs("checkout" , args , 2);
-                    String branch_id = args[1];
-                    Repository.checkout_specified_commit(branch_id);
+                    String branch_name = args[1];
+                    Repository.checkout_specified_branch(branch_name);
                 }
                 break;
             case "branch":
                 //java gitlet.Main branch [branch name]
                 validateNumArgs("branch" , args , 2);
-                String branch_id = args[1];
-                Repository.make_branch(branch_id);
+                String branch_name = args[1];
+                Repository.make_branch(branch_name);
                 break;
+            case "rm-branch":
+                //java gitlet.Main rm-branch [branch name]
+                validateNumArgs("rm-branch" , args , 2);
+                String branch_name_delete = args[1];
+                Repository.delete_branch(branch_name_delete);
+                break;
+            case "reset":
+                //java gitlet.Main reset [commit id]
+                validateNumArgs("reset" , args , 2);
+                String commit_id = args[1];
+                Repository.reset(commit_id);
+                break;
+            case"merge":
+                //java gitlet.Main merge [branch name]
+                validateNumArgs("merge" , args , 2);
+                String branch_name_merge = args[1];
+                Repository.merge(branch_name_merge);
+                break;
+            default:
+                throw error("No command with that name exists.");
         }
     }
 

@@ -54,6 +54,11 @@ public class Commit implements Serializable {
 
     public String get_message(){return this.message;}
 
+    public static boolean is_commit_exist(String commit_id){
+        File commit_file = join(COMMITS_FOLDER , commit_id);
+        return commit_file.exists();
+    }
+
     public static Commit from_file(String commit_id) {
         if (commit_id == null){
             return null;
