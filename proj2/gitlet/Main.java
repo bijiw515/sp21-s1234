@@ -13,7 +13,9 @@ public class Main {
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
     public static void main(String[] args) throws IOException {
-        // TODO: what if args is empty?
+        if (args.length == 0){
+            throw error("Please enter a command.");
+        }
         String command = args[0];
         switch(command) {
             case "init":
@@ -24,44 +26,52 @@ public class Main {
             case "add":
                 //java gitlet.Main add [file name]
                 validateNumArgs("add", args, 2);
+                validate_initialized_repository();
                 String file_addition = args[1];
                 Repository.add_file(file_addition);
                 break;
             case "commit":
                 //java gitlet.Main commit [message]
                 validateNumArgs("commit" , args , 2);
+                validate_initialized_repository();
                 String commit_message = args[1];
-                Repository.make_commit(commit_message);
+                Repository.make_commit(commit_message , null);
                 break;
             case "rm":
                 //java gitlet.Main rm [file name]
                 validateNumArgs("rm" , args , 2);
+                validate_initialized_repository();
                 String file_removal = args[1];
                 Repository.remove_file(file_removal);
                 break;
             case "log":
                 //java gitlet.Main log
                 validateNumArgs("log" , args , 1);
+                validate_initialized_repository();
                 Repository.log();
                 break;
             case "global-log":
                 //java gitlet.Main global-log
                 validateNumArgs("global-log" , args ,1);
+                validate_initialized_repository();
                 Repository.global_log();
                 break;
             case "find":
                 //java gitlet.Main find [commit message]
                 validateNumArgs("find" , args , 2);
+                validate_initialized_repository();
                 String message_find = args[1];
                 Repository.find(message_find);
                 break;
             case "status":
                 //java gitlet.Main status
                 validateNumArgs("status" , args , 1);
+                validate_initialized_repository();
                 Repository.print_status();
             case "checkout":
                 String operation = args[1];
                 //java gitlet.Main checkout -- [file name]
+                validate_initialized_repository();
                 if (operation.equals("--")){
                     validateNumArgs("checkout" , args , 3);
                     String specified_file_name = args[2];
@@ -82,24 +92,28 @@ public class Main {
                 break;
             case "branch":
                 //java gitlet.Main branch [branch name]
+                validate_initialized_repository();
                 validateNumArgs("branch" , args , 2);
                 String branch_name = args[1];
                 Repository.make_branch(branch_name);
                 break;
             case "rm-branch":
                 //java gitlet.Main rm-branch [branch name]
+                validate_initialized_repository();
                 validateNumArgs("rm-branch" , args , 2);
                 String branch_name_delete = args[1];
                 Repository.delete_branch(branch_name_delete);
                 break;
             case "reset":
                 //java gitlet.Main reset [commit id]
+                validate_initialized_repository();
                 validateNumArgs("reset" , args , 2);
                 String commit_id = args[1];
                 Repository.reset(commit_id);
                 break;
             case"merge":
                 //java gitlet.Main merge [branch name]
+                validate_initialized_repository();
                 validateNumArgs("merge" , args , 2);
                 String branch_name_merge = args[1];
                 Repository.merge(branch_name_merge);
@@ -117,14 +131,18 @@ public class Main {
      * @param args Argument array from command line
      * @param n Number of expected arguments
      */
+
     public static void validateNumArgs(String cmd, String[] args, int n) {
         if (args.length != n) {
-            if (args[0].equals("commit")){
+            if (cmd.equals("commit")){
                 throw error("Please enter a commit message.");
             }
-            else {
-                throw error(String.format("Invalid number of arguments for: %s.", cmd));
-            }
+            throw error("Incorrect operands.");
+        }
+    }
+    public static void validate_initialized_repository(){
+        if (!Repository.GITLET_DIR.exists()){
+            throw error("Not in an initialized Gitlet directory.");
         }
     }
 }

@@ -34,7 +34,7 @@ public class Blobs_map extends HashMap<String , String> implements Serializable{
             throw error("No changes added to the commit.");
         }
         //update the blobs in stage for addition
-        if (names_for_addition != null) {
+        if (! names_for_addition.isEmpty()) {
             for (String name_for_addition : names_for_addition) {
                 File file_for_addition = join(Repository.STAGING_ADD, name_for_addition);
                 String blob_id = readContentsAsString(file_for_addition);
@@ -47,7 +47,7 @@ public class Blobs_map extends HashMap<String , String> implements Serializable{
             }
         }
         //update the blobs in stage for removal
-        if ( names_for_removal != null) {
+        if (! names_for_removal.isEmpty()) {
             for (String name_for_removal : names_for_removal) {
                 File file_for_removal = join(Repository.STAGING_REMOVAL, name_for_removal);
                 String blob_id = readContentsAsString(file_for_removal);

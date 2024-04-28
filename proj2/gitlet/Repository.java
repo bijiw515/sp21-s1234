@@ -116,7 +116,7 @@ public class Repository {
     private static void clear_staging_area() {
         //update the blobs in stage for addition
         List<String> names_for_addition = plainFilenamesIn(Repository.STAGING_ADD);
-        if (names_for_addition != null) {
+        if (! names_for_addition.isEmpty()) {
             for (String name_for_addition : names_for_addition) {
                 File file_for_addition = join(Repository.STAGING_ADD, name_for_addition);
                 file_for_addition.delete();
@@ -124,7 +124,7 @@ public class Repository {
         }
         //update the blobs in stage for removal
         List<String> names_for_removal = plainFilenamesIn(Repository.STAGING_REMOVAL);
-        if (names_for_removal != null) {
+        if (! names_for_removal.isEmpty()) {
             for (String name_for_removal : names_for_removal) {
                 File file_for_removal = join(Repository.STAGING_ADD, name_for_removal);
                 file_for_removal.delete();
@@ -175,7 +175,7 @@ public class Repository {
         String initial_blobs_id = sha1_obeject(initial_blobs);
         initial_blobs.save_blobs();
         //set the first commit
-        Commit initial_commit = new Commit("initial commit", null, initial_blobs_id);
+        Commit initial_commit = new Commit("initial commit", null,null , initial_blobs_id);
         initial_commit.save_commit();
         String initial_commit_id = sha1_obeject(initial_commit);
         //set the HEAD and master
@@ -227,7 +227,7 @@ public class Repository {
      * Saves a snapshot of tracked files in the current commit and staging area
      * so they can be restored at a later time, creating a new commit.
      **/
-    public static void make_commit(String message) {
+    public static void make_commit(String message , String merged_in_parent) {
         //copy the parent commit
         String HEAD_id = get_Head_id();
         Commit parent_commit = get_current_commit();
@@ -239,7 +239,7 @@ public class Repository {
         String new_blobs_id = sha1_obeject(new_blobs);
         new_blobs.save_blobs();
         //create new commit
-        Commit new_commit = new Commit(message, HEAD_id, new_blobs_id);
+        Commit new_commit = new Commit(message, HEAD_id, merged_in_parent , new_blobs_id);
         new_commit.save_commit();
         //reset the HEAD and current branch
         String new_commit_id = sha1_obeject(new_commit);
@@ -500,7 +500,7 @@ public class Repository {
         //check if there are staged additions or removals present
         List<String> file_names_addition = plainFilenamesIn(STAGING_ADD);
         List<String> file_names_removal = plainFilenamesIn(STAGING_REMOVAL);
-        if (!(file_names_removal == null && file_names_addition == null)) {
+        if (! file_names_removal.isEmpty() || ! file_names_addition.isEmpty()) {
             throw error("You have uncommitted changes.");
         }
         // check if a branch with the given name does not exist
@@ -514,7 +514,7 @@ public class Repository {
         }
         //check if an untracked file in the current commit would be overwritten or deleted by the merge
         validate_CWD_untracks_curr_commit();
-        //put all associated file names to the set
+        //initialize associated file names to the set
         Set<String> associated_file_names = new TreeSet<>();
         Commit current_commit = get_current_commit();
         put_items_to_set(associated_file_names , current_commit);
@@ -562,11 +562,16 @@ public class Repository {
                     File associated_file = join(CWD , file_name);
                     String curr_tracked_content = get_content_from_blob(current_blob_id);
                     String given_tracked_content = get_content_from_blob(given_blob_id);
-                    writeContents(associated_file,curr_tracked_content + "\n" + given_tracked_content);
+                    writeContents(associated_file,
+                            "<<<<<<< HEAD\n"
+                                    + curr_tracked_content
+                                    + "=======\n"
+                                    + given_tracked_content);
+                    add_file(file_name);
                 }
             }
             //make a new commit as a merged commit
-            make_commit(String.format("Merged %s into %s.",branch_name , get_Head_name()));
+            make_commit(String.format("Merged %s into %s.",branch_name , get_Head_name()) , branch_id);
             //if the merge encountered a conflict, print the message Encountered a merge conflict.
             if (encountered_conflict){
                 System.out.println("Encountered a merge conflict.");

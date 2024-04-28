@@ -32,12 +32,14 @@ public class Commit implements Serializable {
      */
     private String message;
     private String parent;
+    private String merged_in_parent;
     private String blobs;
     private Date time_stamp;
 
-    public Commit(String message, String parent, String blobs) {
+    public Commit(String message, String parent,String merged_in_parent , String blobs) {
         this.message = message;
         this.parent = parent;
+        this.merged_in_parent = merged_in_parent;
         this.blobs = blobs;
         if (this.parent == null) {
             this.time_stamp = new Date(0);
@@ -53,6 +55,9 @@ public class Commit implements Serializable {
     public Blobs_map get_blobs() {return Blobs_map.from_file(this.blobs);}
 
     public String get_message(){return this.message;}
+    public String get_merged_in_parent(){
+        return this.merged_in_parent;
+    }
 
     public static boolean is_commit_exist(String commit_id){
         File commit_file = join(COMMITS_FOLDER , commit_id);
@@ -80,6 +85,16 @@ public class Commit implements Serializable {
     public String toString() {
         SimpleDateFormat sdf = new SimpleDateFormat("E MMM dd HH:mm:ss yyyy Z" , Locale.US);
         String formattedDate = sdf.format(this.time_stamp);
+        if (this.merged_in_parent != null){
+            String substring_parent = this.parent.substring(0 , 7);
+            String substring_sec_parent = this.merged_in_parent.substring(0 , 7);
+            return String.format("===\ncommit %s\nMerge: %s %s\nDate: %s\n%s\n"
+                    , Repository.sha1_obeject(this)
+                    , substring_parent
+                    , substring_sec_parent
+                    , formattedDate,
+                    this.message);
+        }
         return String.format("===\ncommit %s\nDate: %s\n%s\n"
                 , Repository.sha1_obeject(this)
                 , formattedDate, this.message);
